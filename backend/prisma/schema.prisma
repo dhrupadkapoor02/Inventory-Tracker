@@ -59,3 +59,55 @@ model Otp {
   @@index([userId, purpose])
   @@map("otps")
 }
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  products    Product[]
+
+  @@map("categories")
+}
+
+model Supplier {
+  id        String    @id @default(uuid())
+  name      String
+  email     String?
+  phone     String?
+  address   String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  products  Product[]
+
+  @@map("suppliers")
+}
+
+model Product {
+  id            String    @id @default(uuid())
+  name          String
+  sku           String    @unique
+  description   String?
+  unit          String    @default("pcs")
+  costPrice     Decimal   @db.Decimal(10, 2)
+  sellingPrice  Decimal   @db.Decimal(10, 2)
+  quantity      Int       @default(0)
+  reorderLevel  Int       @default(10)
+  expiryDate    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  categoryId    String
+  category      Category  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  supplierId    String?
+  supplier      Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+
+  @@index([categoryId])
+  @@index([supplierId])
+  @@index([expiryDate])
+  @@map("products")
+}

@@ -32,6 +32,9 @@ app.get('/api/health', (req, res) => {
 
 // Routes
 app.use('/api/auth', require('./routes/auth.routes'));
+app.use('/api/categories', require('./routes/category.routes'));
+app.use('/api/suppliers', require('./routes/supplier.routes'));
+app.use('/api/products', require('./routes/product.routes'));
 
 // Additional route groups will be mounted here in later phases
 
