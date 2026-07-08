@@ -35,6 +35,9 @@ app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/categories', require('./routes/category.routes'));
 app.use('/api/suppliers', require('./routes/supplier.routes'));
 app.use('/api/products', require('./routes/product.routes'));
+app.use('/api/purchases', require('./routes/purchase.routes'));
+app.use('/api/sales', require('./routes/sale.routes'));
+app.use('/api/inventory-logs', require('./routes/inventoryLog.routes'));
 
 // Additional route groups will be mounted here in later phases
 
