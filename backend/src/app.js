@@ -30,8 +30,10 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({ success: true, message: 'API is healthy' });
 });
 
-// Routes will be mounted here in later phases
-// app.use('/api/auth', require('./routes/auth.routes'));
+// Routes
+app.use('/api/auth', require('./routes/auth.routes'));
+
+// Additional route groups will be mounted here in later phases
 
 app.use(notFoundHandler);
 app.use(errorHandler);
