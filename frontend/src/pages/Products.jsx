@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Pencil, Trash2, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Sparkles } from 'lucide-react';
 import Modal from '../components/Modal';
 import FormInput from '../components/FormInput';
+import ProductInsightsModal from '../components/ProductInsightsModal';
 import { useAuth } from '../context/AuthContext';
 import * as productApi from '../api/product.api';
 import * as categoryApi from '../api/category.api';
@@ -61,6 +62,7 @@ export default function Products() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [insightsProduct, setInsightsProduct] = useState(null);
 
   // Filters
   const [search, setSearch] = useState('');
@@ -301,6 +303,13 @@ export default function Products() {
                     <td className="px-5 py-3">
                       <div className="flex justify-end gap-2">
                         <button
+                          onClick={() => setInsightsProduct(product)}
+                          className="rounded-lg p-1.5 text-brand-600 hover:bg-brand-50"
+                          title="Generate AI Insights"
+                        >
+                          <Sparkles size={15} />
+                        </button>
+                        <button
                           onClick={() => openEdit(product)}
                           className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
                         >
@@ -461,6 +470,12 @@ export default function Products() {
           </div>
         </form>
       </Modal>
+
+      <ProductInsightsModal
+        open={!!insightsProduct}
+        onClose={() => setInsightsProduct(null)}
+        product={insightsProduct}
+      />
     </div>
   );
 }

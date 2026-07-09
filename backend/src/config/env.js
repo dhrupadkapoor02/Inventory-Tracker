@@ -29,6 +29,7 @@ const env = {
   ai: {
     apiKey: process.env.AI_API_KEY,
     apiUrl: process.env.AI_API_URL,
+    model: process.env.AI_MODEL || 'gemini-2.0-flash',
   },
 };
 
