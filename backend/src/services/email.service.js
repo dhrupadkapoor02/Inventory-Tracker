@@ -1,4 +1,3 @@
-const transporter = require('../config/mailer');
 const env = require('../config/env');
 
 const subjectByPurpose = {
@@ -9,34 +8,32 @@ const subjectByPurpose = {
 async function sendOtpEmail(to, code, purpose) {
   const subject = subjectByPurpose[purpose] || 'Your verification code';
 
-  try {
-    console.log('==============================');
-    console.log('Sending OTP Email...');
-    console.log('To:', to);
-    console.log('Subject:', subject);
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto;">
+      <h2>Inventory Tracker</h2>
+      <p>${subject}. Use the code below. It expires in 10 minutes.</p>
+      <p style="font-size: 28px; font-weight: bold; letter-spacing: 4px;">${code}</p>
+      <p>If you did not request this, you can safely ignore this email.</p>
+    </div>
+  `;
 
-    const info = await transporter.sendMail({
-      from: env.smtp.from,
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${env.email.resendApiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: env.email.from,
       to,
       subject,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto;">
-          <h2>Inventory Tracker</h2>
-          <p>${subject}. Use the code below. It expires in 10 minutes.</p>
-          <p style="font-size: 28px; font-weight: bold; letter-spacing: 4px;">${code}</p>
-          <p>If you did not request this, you can safely ignore this email.</p>
-        </div>
-      `,
-    });
+      html,
+    }),
+  });
 
-    console.log('Email sent successfully!');
-    console.log('Message ID:', info.messageId);
-    console.log('==============================');
-  } catch (err) {
-    console.error('========== EMAIL ERROR ==========');
-    console.error(err);
-    console.error('=================================');
-    throw err;
+  if (!response.ok) {
+    const errorBody = await response.text().catch(() => '');
+    throw new Error(`Failed to send email via Resend (${response.status}): ${errorBody}`);
   }
 }
 
