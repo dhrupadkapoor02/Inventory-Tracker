@@ -7,7 +7,19 @@ const create = asyncHandler(async (req, res) => {
 });
 
 const getAll = asyncHandler(async (req, res) => {
-  const products = await productService.getAllProducts();
+  const { page, limit, search, categoryId, supplierId } = req.query;
+  const result = await productService.getAllProducts({ page, limit, search, categoryId, supplierId });
+  res.status(200).json({ success: true, data: result.items, pagination: result.pagination });
+});
+
+const getLowStock = asyncHandler(async (req, res) => {
+  const products = await productService.getLowStockProducts();
+  res.status(200).json({ success: true, data: products });
+});
+
+const getExpiring = asyncHandler(async (req, res) => {
+  const days = req.query.days || 7;
+  const products = await productService.getExpiringProducts(days);
   res.status(200).json({ success: true, data: products });
 });
 
@@ -26,4 +38,4 @@ const remove = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, message: 'Product deleted.' });
 });
 
-module.exports = { create, getAll, getById, update, remove };
+module.exports = { create, getAll, getLowStock, getExpiring, getById, update, remove };

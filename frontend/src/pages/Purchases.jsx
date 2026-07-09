@@ -23,7 +23,7 @@ export default function Purchases() {
     try {
       const [purchasesRes, productsRes, suppliersRes] = await Promise.all([
         purchaseApi.getPurchases(),
-        productApi.getProducts(),
+        productApi.getProducts({ limit: 1000 }),
         supplierApi.getSuppliers(),
       ]);
       setPurchases(purchasesRes.data.data);

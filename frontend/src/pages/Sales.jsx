@@ -23,7 +23,7 @@ export default function Sales() {
     try {
       const [salesRes, productsRes] = await Promise.all([
         saleApi.getSales(),
-        productApi.getProducts(),
+        productApi.getProducts({ limit: 1000 }),
       ]);
       setSales(salesRes.data.data);
       setProducts(productsRes.data.data);

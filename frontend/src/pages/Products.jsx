@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search } from 'lucide-react';
 import Modal from '../components/Modal';
 import FormInput from '../components/FormInput';
 import { useAuth } from '../context/AuthContext';
@@ -21,6 +21,8 @@ const emptyForm = {
   expiryDate: '',
   description: '',
 };
+
+const PAGE_SIZE = 10;
 
 function StatusBadge({ product }) {
   const isLowStock = product.quantity <= product.reorderLevel;
@@ -51,6 +53,7 @@ export default function Products() {
   const isAdmin = user?.role === 'ADMIN';
 
   const [products, setProducts] = useState([]);
+  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
   const [categories, setCategories] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -59,17 +62,46 @@ export default function Products() {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
 
-  const loadAll = async () => {
-    setLoading(true);
+  // Filters
+  const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [alertFilter, setAlertFilter] = useState('all'); // 'all' | 'lowStock' | 'expiring'
+  const [page, setPage] = useState(1);
+
+  const loadFilterOptions = async () => {
     try {
-      const [productsRes, categoriesRes, suppliersRes] = await Promise.all([
-        productApi.getProducts(),
+      const [categoriesRes, suppliersRes] = await Promise.all([
         categoryApi.getCategories(),
         supplierApi.getSuppliers(),
       ]);
-      setProducts(productsRes.data.data);
       setCategories(categoriesRes.data.data);
       setSuppliers(suppliersRes.data.data);
+    } catch (err) {
+      toast.error('Failed to load categories/suppliers.');
+    }
+  };
+
+  const loadProducts = async () => {
+    setLoading(true);
+    try {
+      if (alertFilter === 'lowStock') {
+        const { data } = await productApi.getLowStockProducts();
+        setProducts(data.data);
+        setPagination({ page: 1, totalPages: 1, total: data.data.length });
+      } else if (alertFilter === 'expiring') {
+        const { data } = await productApi.getExpiringProducts(7);
+        setProducts(data.data);
+        setPagination({ page: 1, totalPages: 1, total: data.data.length });
+      } else {
+        const { data } = await productApi.getProducts({
+          page,
+          limit: PAGE_SIZE,
+          search: search || undefined,
+          categoryId: categoryFilter || undefined,
+        });
+        setProducts(data.data);
+        setPagination(data.pagination);
+      }
     } catch (err) {
       toast.error('Failed to load products.');
     } finally {
@@ -78,8 +110,23 @@ export default function Products() {
   };
 
   useEffect(() => {
-    loadAll();
+    loadFilterOptions();
   }, []);
+
+  useEffect(() => {
+    loadProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, categoryFilter, alertFilter]);
+
+  // Debounce search input so we don't fire a request on every keystroke
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setPage(1);
+      loadProducts();
+    }, 400);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
 
   const openCreate = () => {
     setEditing(null);
@@ -121,7 +168,7 @@ export default function Products() {
         toast.success('Product created.');
       }
       setModalOpen(false);
-      loadAll();
+      loadProducts();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Something went wrong.');
     } finally {
@@ -134,7 +181,7 @@ export default function Products() {
     try {
       await productApi.deleteProduct(product.id);
       toast.success('Product deleted.');
-      loadAll();
+      loadProducts();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Could not delete product.');
     }
@@ -157,7 +204,55 @@ export default function Products() {
         )}
       </div>
 
-      <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name or SKU..."
+            className="w-full rounded-lg border border-slate-300 py-2 pl-9 pr-3 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40"
+          />
+        </div>
+
+        <select
+          value={categoryFilter}
+          onChange={(e) => {
+            setCategoryFilter(e.target.value);
+            setPage(1);
+          }}
+          className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/40"
+        >
+          <option value="">All categories</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+
+        <div className="flex rounded-lg border border-slate-300 p-0.5 text-sm">
+          {[
+            { key: 'all', label: 'All' },
+            { key: 'lowStock', label: 'Low stock' },
+            { key: 'expiring', label: 'Expiring soon' },
+          ].map((opt) => (
+            <button
+              key={opt.key}
+              onClick={() => setAlertFilter(opt.key)}
+              className={`rounded-md px-3 py-1.5 font-medium transition ${
+                alertFilter === opt.key
+                  ? 'bg-brand-600 text-white'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-200 bg-white">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
             <tr>
@@ -226,6 +321,30 @@ export default function Products() {
           </tbody>
         </table>
       </div>
+
+      {alertFilter === 'all' && pagination.totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-between text-sm text-slate-500">
+          <span>
+            Page {pagination.page} of {pagination.totalPages} · {pagination.total} products
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={pagination.page <= 1}
+              className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium hover:bg-slate-100 disabled:opacity-40"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
+              disabled={pagination.page >= pagination.totalPages}
+              className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium hover:bg-slate-100 disabled:opacity-40"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
 
       <Modal
         open={modalOpen}

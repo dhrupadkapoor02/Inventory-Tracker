@@ -36,10 +36,66 @@ async function createProduct(data) {
   return prisma.product.create({ data, include: productInclude });
 }
 
-async function getAllProducts() {
-  return prisma.product.findMany({
-    orderBy: { createdAt: 'desc' },
+const MAX_LIMIT = 1000;
+
+async function getAllProducts({ page = 1, limit = 10, search, categoryId, supplierId } = {}) {
+  const pageNum = Math.max(1, Number(page) || 1);
+  const limitNum = Math.min(MAX_LIMIT, Math.max(1, Number(limit) || 10));
+  const skip = (pageNum - 1) * limitNum;
+
+  const where = {
+    ...(search
+      ? {
+          OR: [
+            { name: { contains: search, mode: 'insensitive' } },
+            { sku: { contains: search, mode: 'insensitive' } },
+          ],
+        }
+      : {}),
+    ...(categoryId ? { categoryId } : {}),
+    ...(supplierId ? { supplierId } : {}),
+  };
+
+  const [items, total] = await Promise.all([
+    prisma.product.findMany({
+      where,
+      skip,
+      take: limitNum,
+      orderBy: { createdAt: 'desc' },
+      include: productInclude,
+    }),
+    prisma.product.count({ where }),
+  ]);
+
+  return {
+    items,
+    pagination: {
+      page: pageNum,
+      limit: limitNum,
+      total,
+      totalPages: Math.ceil(total / limitNum) || 1,
+    },
+  };
+}
+
+// Prisma can't compare two columns (quantity vs reorderLevel) in a where clause,
+// so we fetch and filter in JS - acceptable at this project's scale.
+async function getLowStockProducts() {
+  const products = await prisma.product.findMany({
     include: productInclude,
+    orderBy: { quantity: 'asc' },
+  });
+  return products.filter((p) => p.quantity <= p.reorderLevel);
+}
+
+async function getExpiringProducts(days = 7) {
+  const now = new Date();
+  const future = new Date(Date.now() + Number(days) * 24 * 60 * 60 * 1000);
+
+  return prisma.product.findMany({
+    where: { expiryDate: { not: null, gte: now, lte: future } },
+    include: productInclude,
+    orderBy: { expiryDate: 'asc' },
   });
 }
 
@@ -72,6 +128,8 @@ async function deleteProduct(id) {
 module.exports = {
   createProduct,
   getAllProducts,
+  getLowStockProducts,
+  getExpiringProducts,
   getProductById,
   updateProduct,
   deleteProduct,

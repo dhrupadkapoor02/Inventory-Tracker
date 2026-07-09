@@ -9,6 +9,8 @@ const router = express.Router();
 router.use(authenticate);
 
 router.get('/', controller.getAll);
+router.get('/alerts/low-stock', controller.getLowStock);
+router.get('/alerts/expiring', controller.getExpiring);
 router.get('/:id', controller.getById);
 router.post('/', authorize('ADMIN'), validate(createProductSchema), controller.create);
 router.patch('/:id', authorize('ADMIN'), validate(updateProductSchema), controller.update);
