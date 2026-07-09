@@ -5,6 +5,10 @@ const prisma = require('./config/db');
 const server = app.listen(env.port, () => {
   // eslint-disable-next-line no-console
   console.log(`Server running in ${env.nodeEnv} mode on port ${env.port}`);
+  // eslint-disable-next-line no-console
+  console.log(
+    `AI config -> model: ${env.ai.model} | API key loaded: ${env.ai.apiKey ? 'yes (' + env.ai.apiKey.slice(0, 6) + '...)' : 'NO - missing!'}`
+  );
 });
 
 // Graceful shutdown

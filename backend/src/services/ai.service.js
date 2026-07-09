@@ -28,7 +28,18 @@ async function generateJson(prompt) {
   }
 
   if (!response.ok) {
-    throw new AppError(`AI service request failed (${response.status}).`, 502);
+    const errorBody = await response.text();
+    // eslint-disable-next-line no-console
+    console.error('Gemini API error response:', response.status, errorBody);
+
+    let reason = errorBody;
+    try {
+      reason = JSON.parse(errorBody)?.error?.message || errorBody;
+    } catch {
+      // errorBody wasn't JSON - use it as-is
+    }
+
+    throw new AppError(`AI service request failed: ${reason}`, response.status === 401 || response.status === 403 ? 502 : response.status);
   }
 
   const data = await response.json();
