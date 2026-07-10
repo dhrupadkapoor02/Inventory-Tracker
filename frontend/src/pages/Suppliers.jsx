@@ -1,16 +1,16 @@
-import { useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
-import Modal from '../components/Modal';
-import FormInput from '../components/FormInput';
-import { useAuth } from '../context/AuthContext';
-import * as supplierApi from '../api/supplier.api';
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { Plus, Pencil, Trash2 } from "lucide-react";
+import Modal from "../components/Modal";
+import FormInput from "../components/FormInput";
+import { useAuth } from "../context/AuthContext";
+import * as supplierApi from "../api/supplier.api";
 
-const emptyForm = { name: '', email: '', phone: '', address: '' };
+const emptyForm = { name: "", email: "", phone: "", address: "" };
 
 export default function Suppliers() {
   const { user } = useAuth();
-  const isAdmin = user?.role === 'ADMIN';
+  const isAdmin = user?.role === "ADMIN";
 
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,7 +25,7 @@ export default function Suppliers() {
       const { data } = await supplierApi.getSuppliers();
       setSuppliers(data.data);
     } catch (err) {
-      toast.error('Failed to load suppliers.');
+      toast.error("Failed to load suppliers.");
     } finally {
       setLoading(false);
     }
@@ -45,9 +45,9 @@ export default function Suppliers() {
     setEditing(supplier);
     setForm({
       name: supplier.name,
-      email: supplier.email || '',
-      phone: supplier.phone || '',
-      address: supplier.address || '',
+      email: supplier.email || "",
+      phone: supplier.phone || "",
+      address: supplier.address || "",
     });
     setModalOpen(true);
   };
@@ -58,15 +58,15 @@ export default function Suppliers() {
     try {
       if (editing) {
         await supplierApi.updateSupplier(editing.id, form);
-        toast.success('Supplier updated.');
+        toast.success("Supplier updated.");
       } else {
         await supplierApi.createSupplier(form);
-        toast.success('Supplier created.');
+        toast.success("Supplier created.");
       }
       setModalOpen(false);
       loadSuppliers();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Something went wrong.');
+      toast.error(err.response?.data?.message || "Something went wrong.");
     } finally {
       setSaving(false);
     }
@@ -76,10 +76,10 @@ export default function Suppliers() {
     if (!window.confirm(`Delete supplier "${supplier.name}"?`)) return;
     try {
       await supplierApi.deleteSupplier(supplier.id);
-      toast.success('Supplier deleted.');
+      toast.success("Supplier deleted.");
       loadSuppliers();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Could not delete supplier.');
+      toast.error(err.response?.data?.message || "Could not delete supplier.");
     }
   };
 
@@ -87,8 +87,12 @@ export default function Suppliers() {
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-2xl font-semibold text-slate-900">Suppliers</h1>
-          <p className="mt-1 text-sm text-slate-500">Vendors you purchase stock from</p>
+          <h1 className="font-display text-2xl font-semibold text-slate-900">
+            Suppliers
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Vendors you purchase stock from
+          </p>
         </div>
         {isAdmin && (
           <button
@@ -100,8 +104,8 @@ export default function Suppliers() {
         )}
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white">
-        <table className="w-full text-left text-sm">
+      <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+        <table className="w-full min-w-[600px] text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
             <tr>
               <th className="px-5 py-3">Name</th>
@@ -114,23 +118,37 @@ export default function Suppliers() {
           <tbody className="divide-y divide-slate-100">
             {loading ? (
               <tr>
-                <td colSpan={5} className="px-5 py-6 text-center text-slate-400">
+                <td
+                  colSpan={5}
+                  className="px-5 py-6 text-center text-slate-400"
+                >
                   Loading...
                 </td>
               </tr>
             ) : suppliers.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-5 py-6 text-center text-slate-400">
+                <td
+                  colSpan={5}
+                  className="px-5 py-6 text-center text-slate-400"
+                >
                   No suppliers yet.
                 </td>
               </tr>
             ) : (
               suppliers.map((supplier) => (
                 <tr key={supplier.id}>
-                  <td className="px-5 py-3 font-medium text-slate-900">{supplier.name}</td>
-                  <td className="px-5 py-3 text-slate-500">{supplier.email || '—'}</td>
-                  <td className="px-5 py-3 text-slate-500">{supplier.phone || '—'}</td>
-                  <td className="px-5 py-3 text-slate-500">{supplier._count?.products ?? 0}</td>
+                  <td className="px-5 py-3 font-medium text-slate-900">
+                    {supplier.name}
+                  </td>
+                  <td className="px-5 py-3 text-slate-500">
+                    {supplier.email || "—"}
+                  </td>
+                  <td className="px-5 py-3 text-slate-500">
+                    {supplier.phone || "—"}
+                  </td>
+                  <td className="px-5 py-3 text-slate-500">
+                    {supplier._count?.products ?? 0}
+                  </td>
                   {isAdmin && (
                     <td className="px-5 py-3">
                       <div className="flex justify-end gap-2">
@@ -156,7 +174,11 @@ export default function Suppliers() {
         </table>
       </div>
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Edit supplier' : 'New supplier'}>
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editing ? "Edit supplier" : "New supplier"}
+      >
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <FormInput
             label="Name"
@@ -185,7 +207,7 @@ export default function Suppliers() {
             disabled={saving}
             className="mt-2 rounded-lg bg-brand-600 py-2.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
           >
-            {saving ? 'Saving...' : 'Save'}
+            {saving ? "Saving..." : "Save"}
           </button>
         </form>
       </Modal>

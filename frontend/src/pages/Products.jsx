@@ -1,26 +1,26 @@
-import { useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
-import { Plus, Pencil, Trash2, Search, Sparkles } from 'lucide-react';
-import Modal from '../components/Modal';
-import FormInput from '../components/FormInput';
-import ProductInsightsModal from '../components/ProductInsightsModal';
-import { useAuth } from '../context/AuthContext';
-import * as productApi from '../api/product.api';
-import * as categoryApi from '../api/category.api';
-import * as supplierApi from '../api/supplier.api';
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { Plus, Pencil, Trash2, Search, Sparkles } from "lucide-react";
+import Modal from "../components/Modal";
+import FormInput from "../components/FormInput";
+import ProductInsightsModal from "../components/ProductInsightsModal";
+import { useAuth } from "../context/AuthContext";
+import * as productApi from "../api/product.api";
+import * as categoryApi from "../api/category.api";
+import * as supplierApi from "../api/supplier.api";
 
 const emptyForm = {
-  name: '',
-  sku: '',
-  categoryId: '',
-  supplierId: '',
-  unit: 'pcs',
-  costPrice: '',
-  sellingPrice: '',
-  quantity: '',
-  reorderLevel: '',
-  expiryDate: '',
-  description: '',
+  name: "",
+  sku: "",
+  categoryId: "",
+  supplierId: "",
+  unit: "pcs",
+  costPrice: "",
+  sellingPrice: "",
+  quantity: "",
+  reorderLevel: "",
+  expiryDate: "",
+  description: "",
 };
 
 const PAGE_SIZE = 10;
@@ -29,7 +29,8 @@ function StatusBadge({ product }) {
   const isLowStock = product.quantity <= product.reorderLevel;
   const isExpiringSoon =
     product.expiryDate &&
-    new Date(product.expiryDate) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    new Date(product.expiryDate) <=
+      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
   if (!isLowStock && !isExpiringSoon) return null;
 
@@ -51,10 +52,14 @@ function StatusBadge({ product }) {
 
 export default function Products() {
   const { user } = useAuth();
-  const isAdmin = user?.role === 'ADMIN';
+  const isAdmin = user?.role === "ADMIN";
 
   const [products, setProducts] = useState([]);
-  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
+  const [pagination, setPagination] = useState({
+    page: 1,
+    totalPages: 1,
+    total: 0,
+  });
   const [categories, setCategories] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -65,9 +70,9 @@ export default function Products() {
   const [insightsProduct, setInsightsProduct] = useState(null);
 
   // Filters
-  const [search, setSearch] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('');
-  const [alertFilter, setAlertFilter] = useState('all'); // 'all' | 'lowStock' | 'expiring'
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [alertFilter, setAlertFilter] = useState("all"); // 'all' | 'lowStock' | 'expiring'
   const [page, setPage] = useState(1);
 
   const loadFilterOptions = async () => {
@@ -79,18 +84,18 @@ export default function Products() {
       setCategories(categoriesRes.data.data);
       setSuppliers(suppliersRes.data.data);
     } catch (err) {
-      toast.error('Failed to load categories/suppliers.');
+      toast.error("Failed to load categories/suppliers.");
     }
   };
 
   const loadProducts = async () => {
     setLoading(true);
     try {
-      if (alertFilter === 'lowStock') {
+      if (alertFilter === "lowStock") {
         const { data } = await productApi.getLowStockProducts();
         setProducts(data.data);
         setPagination({ page: 1, totalPages: 1, total: data.data.length });
-      } else if (alertFilter === 'expiring') {
+      } else if (alertFilter === "expiring") {
         const { data } = await productApi.getExpiringProducts(7);
         setProducts(data.data);
         setPagination({ page: 1, totalPages: 1, total: data.data.length });
@@ -105,7 +110,7 @@ export default function Products() {
         setPagination(data.pagination);
       }
     } catch (err) {
-      toast.error('Failed to load products.');
+      toast.error("Failed to load products.");
     } finally {
       setLoading(false);
     }
@@ -142,14 +147,14 @@ export default function Products() {
       name: product.name,
       sku: product.sku,
       categoryId: product.category.id,
-      supplierId: product.supplier?.id || '',
+      supplierId: product.supplier?.id || "",
       unit: product.unit,
       costPrice: product.costPrice,
       sellingPrice: product.sellingPrice,
       quantity: product.quantity,
       reorderLevel: product.reorderLevel,
-      expiryDate: product.expiryDate ? product.expiryDate.slice(0, 10) : '',
-      description: product.description || '',
+      expiryDate: product.expiryDate ? product.expiryDate.slice(0, 10) : "",
+      description: product.description || "",
     });
     setModalOpen(true);
   };
@@ -164,15 +169,15 @@ export default function Products() {
 
       if (editing) {
         await productApi.updateProduct(editing.id, payload);
-        toast.success('Product updated.');
+        toast.success("Product updated.");
       } else {
         await productApi.createProduct(payload);
-        toast.success('Product created.');
+        toast.success("Product created.");
       }
       setModalOpen(false);
       loadProducts();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Something went wrong.');
+      toast.error(err.response?.data?.message || "Something went wrong.");
     } finally {
       setSaving(false);
     }
@@ -182,10 +187,10 @@ export default function Products() {
     if (!window.confirm(`Delete product "${product.name}"?`)) return;
     try {
       await productApi.deleteProduct(product.id);
-      toast.success('Product deleted.');
+      toast.success("Product deleted.");
       loadProducts();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Could not delete product.');
+      toast.error(err.response?.data?.message || "Could not delete product.");
     }
   };
 
@@ -193,8 +198,12 @@ export default function Products() {
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-2xl font-semibold text-slate-900">Products</h1>
-          <p className="mt-1 text-sm text-slate-500">Your full product catalog and stock levels</p>
+          <h1 className="font-display text-2xl font-semibold text-slate-900">
+            Products
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Your full product catalog and stock levels
+          </p>
         </div>
         {isAdmin && (
           <button
@@ -208,7 +217,10 @@ export default function Products() {
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px]">
-          <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search
+            size={16}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+          />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -235,17 +247,17 @@ export default function Products() {
 
         <div className="flex rounded-lg border border-slate-300 p-0.5 text-sm">
           {[
-            { key: 'all', label: 'All' },
-            { key: 'lowStock', label: 'Low stock' },
-            { key: 'expiring', label: 'Expiring soon' },
+            { key: "all", label: "All" },
+            { key: "lowStock", label: "Low stock" },
+            { key: "expiring", label: "Expiring soon" },
           ].map((opt) => (
             <button
               key={opt.key}
               onClick={() => setAlertFilter(opt.key)}
               className={`rounded-md px-3 py-1.5 font-medium transition ${
                 alertFilter === opt.key
-                  ? 'bg-brand-600 text-white'
-                  : 'text-slate-600 hover:bg-slate-100'
+                  ? "bg-brand-600 text-white"
+                  : "text-slate-600 hover:bg-slate-100"
               }`}
             >
               {opt.label}
@@ -255,7 +267,7 @@ export default function Products() {
       </div>
 
       <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-        <table className="w-full text-left text-sm">
+        <table className="w-full min-w-[800px] text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
             <tr>
               <th className="px-5 py-3">Product</th>
@@ -270,13 +282,19 @@ export default function Products() {
           <tbody className="divide-y divide-slate-100">
             {loading ? (
               <tr>
-                <td colSpan={7} className="px-5 py-6 text-center text-slate-400">
+                <td
+                  colSpan={7}
+                  className="px-5 py-6 text-center text-slate-400"
+                >
                   Loading...
                 </td>
               </tr>
             ) : products.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-5 py-6 text-center text-slate-400">
+                <td
+                  colSpan={7}
+                  className="px-5 py-6 text-center text-slate-400"
+                >
                   No products yet.
                 </td>
               </tr>
@@ -288,8 +306,12 @@ export default function Products() {
                     <p className="text-xs text-slate-400">{product.sku}</p>
                     <StatusBadge product={product} />
                   </td>
-                  <td className="px-5 py-3 text-slate-500">{product.category.name}</td>
-                  <td className="px-5 py-3 text-slate-500">{product.supplier?.name || '—'}</td>
+                  <td className="px-5 py-3 text-slate-500">
+                    {product.category.name}
+                  </td>
+                  <td className="px-5 py-3 text-slate-500">
+                    {product.supplier?.name || "—"}
+                  </td>
                   <td className="px-5 py-3 text-slate-500">
                     {product.quantity} {product.unit}
                   </td>
@@ -297,7 +319,9 @@ export default function Products() {
                     ₹{product.costPrice} / ₹{product.sellingPrice}
                   </td>
                   <td className="px-5 py-3 text-slate-500">
-                    {product.expiryDate ? new Date(product.expiryDate).toLocaleDateString() : '—'}
+                    {product.expiryDate
+                      ? new Date(product.expiryDate).toLocaleDateString()
+                      : "—"}
                   </td>
                   {isAdmin && (
                     <td className="px-5 py-3">
@@ -331,10 +355,11 @@ export default function Products() {
         </table>
       </div>
 
-      {alertFilter === 'all' && pagination.totalPages > 1 && (
+      {alertFilter === "all" && pagination.totalPages > 1 && (
         <div className="mt-4 flex items-center justify-between text-sm text-slate-500">
           <span>
-            Page {pagination.page} of {pagination.totalPages} · {pagination.total} products
+            Page {pagination.page} of {pagination.totalPages} ·{" "}
+            {pagination.total} products
           </span>
           <div className="flex gap-2">
             <button
@@ -345,7 +370,9 @@ export default function Products() {
               Previous
             </button>
             <button
-              onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
+              onClick={() =>
+                setPage((p) => Math.min(pagination.totalPages, p + 1))
+              }
               disabled={pagination.page >= pagination.totalPages}
               className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium hover:bg-slate-100 disabled:opacity-40"
             >
@@ -358,11 +385,14 @@ export default function Products() {
       <Modal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={editing ? 'Edit product' : 'New product'}
+        title={editing ? "Edit product" : "New product"}
         maxWidth="max-w-lg"
       >
-        <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
-          <div className="col-span-2">
+        <form
+          onSubmit={handleSubmit}
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+        >
+          <div className="sm:col-span-2">
             <FormInput
               label="Product name"
               value={form.name}
@@ -384,7 +414,9 @@ export default function Products() {
           />
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-slate-700">Category</label>
+            <label className="text-sm font-medium text-slate-700">
+              Category
+            </label>
             <select
               value={form.categoryId}
               onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
@@ -401,7 +433,9 @@ export default function Products() {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-slate-700">Supplier (optional)</label>
+            <label className="text-sm font-medium text-slate-700">
+              Supplier (optional)
+            </label>
             <select
               value={form.supplierId}
               onChange={(e) => setForm({ ...form, supplierId: e.target.value })}
@@ -444,7 +478,7 @@ export default function Products() {
             value={form.reorderLevel}
             onChange={(e) => setForm({ ...form, reorderLevel: e.target.value })}
           />
-          <div className="col-span-2">
+          <div className="sm:col-span-2">
             <FormInput
               label="Expiry date (optional)"
               type="date"
@@ -452,20 +486,22 @@ export default function Products() {
               onChange={(e) => setForm({ ...form, expiryDate: e.target.value })}
             />
           </div>
-          <div className="col-span-2">
+          <div className="sm:col-span-2">
             <FormInput
               label="Description (optional)"
               value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, description: e.target.value })
+              }
             />
           </div>
-          <div className="col-span-2">
+          <div className="sm:col-span-2">
             <button
               type="submit"
               disabled={saving}
               className="w-full rounded-lg bg-brand-600 py-2.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
             >
-              {saving ? 'Saving...' : 'Save'}
+              {saving ? "Saving..." : "Save"}
             </button>
           </div>
         </form>
